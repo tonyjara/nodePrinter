@@ -94,15 +94,7 @@ router.use(express.json());
 router.post("/printer-data", postPrintData);
 
 router.get("/", (req, res) => {
-  res.json({ name: "asdf", age: 22 });
-});
-let counter = 0;
-
-router.post("/add", (req, res) => {
-  console.log(req.body);
-  counter += req.body.number;
-
-  res.json({ counter: counter });
+  res.send("Working");
 });
 
 /* ----------------------------- ERROR HANDLING ----------------------------- */
