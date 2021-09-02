@@ -23,31 +23,39 @@ const config = {
 };
 
 /* -------------------------------- FUNCTIONS ------------------------------- */
-const printHandler = async (data) => {
-  let printer = new ThermalPrinter({
-    type: Types.EPSON, // 'star' or 'epson'
-    interface: "Buffer",
-    options: {
-      timeout: 1000,
-    },
-    width: 32, // Number of characters in one line - default: 48
-    characterSet: "SLOVENIA", // Character set - default: SLOVENIA
-    removeSpecialCharacters: false, // Removes special characters - default: false
-    lineCharacter: "-", // Use custom character for drawing lines - default: -
-  });
 
-  let isConnected = await printer.isPrinterConnected();
-  console.log("Printer connected:", isConnected);
-  data.printerCommands.forEach((command) => {
-    // printer.newLine();
-    return eval(command);
-  });
-
-  printer.openCashDrawer();
-
+const getPrinters = async () => {
   try {
-    await printer.execute();
+    const printers = await printerDriver.getPrinters();
+    console.log(printers);
+    return printers;
+  } catch (err) {
+    console.log(err);
+  }
+};
 
+const printJson = async (data) => {
+  try {
+    let printer = new ThermalPrinter({
+      type: Types.EPSON, // 'star' or 'epson'
+      interface: "Buffer",
+      options: {
+        timeout: 1000,
+      },
+      width: 32, // Number of characters in one line - default: 48
+      characterSet: "SLOVENIA", // Character set - default: SLOVENIA
+      removeSpecialCharacters: false, // Removes special characters - default: false
+      lineCharacter: "-", // Use custom character for drawing lines - default: -
+    });
+
+    let isConnected = await printer.isPrinterConnected();
+    isConnected && (await printer.execute());
+    console.log("Printer connected:", isConnected);
+    data.printerCommands.forEach((command) => {
+      return eval(command);
+    });
+
+    // printer.openCashDrawer();
     printerDriver.printDirect({
       data: printer.getBuffer(), // or simple String: "some text"
       printer: data.printerName, // printer name, if missing then will print to default printer
@@ -65,8 +73,7 @@ const printHandler = async (data) => {
 };
 
 const postPrintData = (req, res, next) => {
-  console.log(req.body);
-  printHandler(req.body);
+  printJson(req.body);
 
   return res.status(201).json(req.body);
 };
@@ -93,11 +100,17 @@ router.use(express.json());
 
 router.post("/printer-data", postPrintData);
 
-router.get("/", (req, res) => {
-  res.send("Working");
+router.get("/get-printers", async (req, res) => {
+  let printer = await getPrinters();
+
+  res.status(200).json(printer);
 });
 
-/* ----------------------------- ERROR HANDLING ----------------------------- */
+router.get("/check", (req, res) => {
+  res.status(200).send("Working");
+});
+
+/* --------------- ERROR HANDLING -------------------- */
 
 router.use((req, res, next) => {
   const error = new Error("Not found");
