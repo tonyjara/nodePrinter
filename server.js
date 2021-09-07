@@ -21,6 +21,13 @@ const SERVER = {
 const config = {
   server: SERVER,
 };
+const httpServer = http.createServer(router);
+httpServer.listen(config.server.port, () =>
+  console.info(
+    NAMESPACE,
+    `Server is running ${config.server.hostname}:${config.server.port}`
+  )
+);
 
 /* -------------------------------- FUNCTIONS ------------------------------- */
 
@@ -97,7 +104,11 @@ router.use((req, res, next) => {
 /** Parse the body of the request */
 router.use(express.urlencoded({ extended: true }));
 router.use(express.json());
-
+router.get("/", (req, res) =>
+  res.send(`
+    <h1>Nyto Node Printer!</h1> 
+`)
+);
 router.post("/printer-data", postPrintData);
 
 router.get("/get-printers", async (req, res) => {
@@ -119,12 +130,3 @@ router.use((req, res, next) => {
     message: error.message,
   });
 });
-
-const httpServer = http.createServer(router);
-
-httpServer.listen(config.server.port, () =>
-  console.info(
-    NAMESPACE,
-    `Server is running ${config.server.hostname}:${config.server.port}`
-  )
-);
